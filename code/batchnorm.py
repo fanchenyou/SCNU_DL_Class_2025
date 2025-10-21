@@ -2,6 +2,27 @@ import torch
 import torch.nn as nn
 from typing import Tuple, Optional
 
+"""批量归一化操作的实现
+
+# The code credits to https://colab.research.google.com/github/d2l-ai/d2l-en-colab/blob/master/chapter_convolutional-modern/batch-norm.ipynb#scrollTo=9d2244aa
+
+Args:
+    X: 输入张量，可以是形状为(批量大小, 特征数)的全连接层输入，
+        或形状为(批量大小, 通道数, 高度, 宽度)的卷积层输入
+    gamma: 缩放参数，可学习
+    beta: 平移参数，可学习
+    moving_mean: 全局移动平均均值
+    moving_var: 全局移动平均方差
+    eps: 防止除零错误的小值
+    momentum: 更新移动平均的动量
+    
+Returns:
+    Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: 
+        - 归一化、缩放和平移后的输出
+        - 更新后的移动平均均值
+        - 更新后的移动平均方差
+"""
+
 def batch_norm(
     X: torch.Tensor, 
     gamma: torch.Tensor, 
@@ -11,24 +32,7 @@ def batch_norm(
     eps: float = 1e-5, 
     momentum: float = 0.1
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """批量归一化操作的实现
-    
-    Args:
-        X: 输入张量，可以是形状为(批量大小, 特征数)的全连接层输入，
-           或形状为(批量大小, 通道数, 高度, 宽度)的卷积层输入
-        gamma: 缩放参数，可学习
-        beta: 平移参数，可学习
-        moving_mean: 全局移动平均均值
-        moving_var: 全局移动平均方差
-        eps: 防止除零错误的小值
-        momentum: 更新移动平均的动量
-        
-    Returns:
-        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: 
-            - 归一化、缩放和平移后的输出
-            - 更新后的移动平均均值
-            - 更新后的移动平均方差
-    """
+
     # 判断是否处于训练模式
     if not torch.is_grad_enabled():
         # 推理模式下使用移动平均得到的均值和方差
@@ -53,13 +57,13 @@ def batch_norm(
         moving_mean = (1.0 - momentum) * moving_mean + momentum * mean.detach()
         moving_var = (1.0 - momentum) * moving_var + momentum * var.detach()
     
-    # 缩放和平移
-    Y = gamma * X_hat + beta
+    Y = gamma * X_hat + beta # 缩放和平移
     
     return Y, moving_mean, moving_var
 
 
-# 测试用例：使用形状为(B=2,C=3,H=10,W=10)的输入
+
+# 测试用例：使用形状为(B=2,C=3,H=5,W=5)的输入
 def test_batch_norm():
     # 设置随机种子，确保结果可复现
     torch.manual_seed(42)
