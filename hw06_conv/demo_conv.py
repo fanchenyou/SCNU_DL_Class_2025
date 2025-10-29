@@ -10,7 +10,7 @@ from torchvision.utils import save_image
 ## Warning: Do not modify any lines below  ###
 ###############################################
 # Read the image
-image = cv2.imread('porche.jpg')
+image = cv2.imread('porche.png')
 # Convert BGR image to RGB image
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 # Define a transform to convert the image to torch tensor
