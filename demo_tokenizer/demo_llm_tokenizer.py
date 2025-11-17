@@ -7,7 +7,7 @@ if 1==1:
     sp = spm.SentencePieceProcessor(model_file='./model_chatglm/tokenizer.model')
     print(sp)
 
-    vocabs = [sp.IdToPiece(id) for id in range(sp.GetPieceSize())]
+    vocabs = [(id, sp.IdToPiece(id)) for id in range(sp.GetPieceSize())]
     print(vocabs[800:1000])
 
     special_tokens = ["<s>", "</s>", "<unk>"]
@@ -35,17 +35,17 @@ if 1==1:
     chinese_pattern = r'^[\u4e00-\u9fff\u3000\u3001\u3002\uff0c]+$' #\uff1b\uff1a\uff01\uff1f\u2018\u2019\u201c\u201d\uff08\uff09\u3010\u3011\u300a\u300b ]+$'
 
     # 使用Unicode范围匹配中文字符 (\u4e00-\u9fff是中文基本区)
-    for id, token in enumerate(vocabs):
+    for _, (id, token) in enumerate(vocabs):
         try:
             # 将token解码为文本
             decoded_text = token #tokenizer.decode([token_id])
             
             # 检查解码后的文本是否只包含中文字符或逗号和句号的编码
             if re.match(chinese_pattern, decoded_text):
-                chinese_chars.append((token, decoded_text))
+                chinese_chars.append((id,decoded_text))
                 if len(decoded_text) >= 3:
-                    chinese_chars_long.append((token, decoded_text))
-                    print(f"Token: {token} -> '{decoded_text}' {len(decoded_text)}")
+                    chinese_chars_long.append((id,decoded_text))
+                    #print(f"Token: {token} -> '{decoded_text}' {len(decoded_text)}")
         except:
             continue
 
@@ -53,21 +53,21 @@ if 1==1:
 
     # 将结果保存到文件
     with open('out_chatglm_chinese_chars.txt', 'w', encoding='utf-8') as f:
-        for token, text in chinese_chars:
-            f.write(f"{token}\t{text}\n")
+        for id, text in chinese_chars:
+            f.write(f"{id}\t{text}\n")
     print("结果已保存到 out_chatglm_chinese_chars.txt")
 
     with open('out_chatglm_chinese_chars_long.txt', 'w', encoding='utf-8') as f:
-        for token, text in chinese_chars_long:
-            f.write(f"{token}\t{text}\n")
+        for id, text in chinese_chars_long:
+            f.write(f"{id}\t{text}\n")
     print("结果已保存到 out_chatglm_chinese_chars_long.txt")
-    
+    print(chinese_chars_long)
 
-from transformers import AutoTokenizer
 
 # This is Qwen3 model
 # https://huggingface.co/Qwen/Qwen3-0.6B/tree/main
 if 2==2:
+    from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained('./model_qwen3')
 
     # 获取词汇表
@@ -78,6 +78,7 @@ if 2==2:
     print("\n词汇表中的所有中文字符:")
     chinese_chars = []
     chinese_chars_long = []
+    chinese_chars_show = []
     chinese_pattern = r'^[\u4e00-\u9fff\u3000\u3001\u3002\uff0c]+$' #\uff1b\uff1a\uff01\uff1f\u2018\u2019\u201c\u201d\uff08\uff09\u3010\u3011\u300a\u300b ]+$'
 
     # 使用Unicode范围匹配中文字符 (\u4e00-\u9fff是中文基本区)
@@ -88,24 +89,26 @@ if 2==2:
             
             # 检查解码后的文本是否只包含中文字符或逗号和句号的编码
             if re.match(chinese_pattern, decoded_text):
-                chinese_chars.append((token, decoded_text, token_id))
-                if len(decoded_text) >= 3:
-                    chinese_chars_long.append((token, decoded_text, token_id))
-                    print(f"Token: {token} -> '{decoded_text}' -> ID: {token_id} {len(decoded_text)}")
+                chinese_chars.append((token_id, decoded_text))
+                if len(decoded_text) >= 4:
+                    chinese_chars_long.append((token_id, decoded_text))
+                    #print(f"Token: {token} -> '{decoded_text}' -> ID: {token_id} {len(decoded_text)}")
+                if len(decoded_text) >= 4:
+                    chinese_chars_show.append(decoded_text)
         except:
             continue
 
     print(f"\n找到的中文字符总数: {len(chinese_chars)}")
     print(f"\n找到的>=4的中文字符总数: {len(chinese_chars_long)}")
-
+    print(chinese_chars_show)
     # 将结果保存到文件
     with open('out_qwen3_chinese_chars.txt', 'w', encoding='utf-8') as f:
-        for token, text, token_id in chinese_chars:
+        for token_id, text in chinese_chars:
             f.write(f"{token}\t{text}\t{token_id}\n")
     print("结果已保存到 out_qwen3_chinese_chars.txt")
 
     with open('out_qwen3_chinese_chars_long.txt', 'w', encoding='utf-8') as f:
-        for token, text, token_id in chinese_chars_long:
+        for token_id, text in chinese_chars_long:
             f.write(f"{token}\t{text}\t{token_id}\n")
     print("结果已保存到 out_qwen3_chinese_chars_long.txt")
     
