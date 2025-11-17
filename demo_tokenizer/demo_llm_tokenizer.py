@@ -7,21 +7,18 @@ if 1==1:
     sp = spm.SentencePieceProcessor(model_file='./model_chatglm/tokenizer.model')
     print(sp)
 
+    # GLM 的词汇表模型, 使用SPM打开
     vocabs = [(id, sp.IdToPiece(id)) for id in range(sp.GetPieceSize())]
     print(vocabs[800:1000])
-
-    special_tokens = ["<s>", "</s>", "<unk>"]
-    for st in special_tokens:
-        print(sp.PieceToId(st))
-
 
     ids = sp.Encode("Hello this is a test.", out_type=str, enable_sampling=False, alpha=0.1, nbest_size=-1)
     print(ids)
 
-    # 筛选并打印所有中文字符
+    # 以下代码筛选并打印所有中文字符
     print("\n词汇表中的所有中文字符:")
     chinese_chars = []
     chinese_chars_long = []
+    chinese_chars_show = []
     
     '''
     中文字符+标点正则表达式 (借助deepseek实现)
@@ -46,11 +43,14 @@ if 1==1:
                 if len(decoded_text) >= 3:
                     chinese_chars_long.append((id,decoded_text))
                     #print(f"Token: {token} -> '{decoded_text}' {len(decoded_text)}")
+                if len(decoded_text) >= 5:
+                    chinese_chars_show.append((decoded_text))
         except:
             continue
 
 
-
+    # print(chinese_chars_show)
+    
     # 将结果保存到文件
     with open('out_chatglm_chinese_chars.txt', 'w', encoding='utf-8') as f:
         for id, text in chinese_chars:
@@ -61,13 +61,17 @@ if 1==1:
         for id, text in chinese_chars_long:
             f.write(f"{id}\t{text}\n")
     print("结果已保存到 out_chatglm_chinese_chars_long.txt")
-    print(chinese_chars_long)
+    
 
+
+
+from transformers import AutoTokenizer
 
 # This is Qwen3 model
 # https://huggingface.co/Qwen/Qwen3-0.6B/tree/main
 if 2==2:
-    from transformers import AutoTokenizer
+    
+    # Qwen 的词汇模型, 使用AutoTokenizer打开（目前新模型均使用这个方式）
     tokenizer = AutoTokenizer.from_pretrained('./model_qwen3')
 
     # 获取词汇表
@@ -100,8 +104,9 @@ if 2==2:
 
     print(f"\n找到的中文字符总数: {len(chinese_chars)}")
     print(f"\n找到的>=4的中文字符总数: {len(chinese_chars_long)}")
-    print(chinese_chars_show)
-    # 将结果保存到文件
+    #print(chinese_chars_show)
+    
+    # 将结果保存到文件，可以查看所有中文的字符
     with open('out_qwen3_chinese_chars.txt', 'w', encoding='utf-8') as f:
         for token_id, text in chinese_chars:
             f.write(f"{token}\t{text}\t{token_id}\n")
